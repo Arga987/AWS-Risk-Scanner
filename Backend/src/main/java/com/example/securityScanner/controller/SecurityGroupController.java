@@ -1,10 +1,10 @@
 package com.example.securityScanner.controller;
 
-import com.example.securityScanner.model.SecurityGroupResponse;
+import com.example.securityScanner.dto.SecurityFindingResponseDto;
+import com.example.securityScanner.dto.SecurityGroupResponseDto;
 import com.example.securityScanner.service.SecurityGroupService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import software.amazon.awssdk.services.ec2.model.SecurityGroup;
 
 import java.util.List;
 
@@ -17,8 +17,14 @@ public class SecurityGroupController {
         this.securityGroupService = securityGroupService;
     }
 
+    @Deprecated
     @GetMapping("/security-groups")
-    public List<SecurityGroupResponse> getSecurityGroups() {
+    public List<SecurityGroupResponseDto> getSecurityGroups() {
         return securityGroupService.getSecurityGroups();
+    }
+
+    @GetMapping("/security-groups/scan")
+    public List<SecurityFindingResponseDto> scanSecurityGroups() {
+        return securityGroupService.scanSecurityGroups();
     }
 }
