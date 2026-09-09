@@ -34,13 +34,24 @@ public class SecurityGroupService {
     }
 
     private SecurityGroupResponseDto mapToResponse(SecurityGroup sg) {
-
-        List<InboundRuleResponseDto> inboundRules = sg.ipPermissions().stream().flatMap(
-                permission -> permission.ipRanges().stream().map(
-                        ipRange -> new InboundRuleResponseDto(permission.ipProtocol(),
-                                permission.fromPort(),
-                                permission.toPort(),
-                                ipRange.cidrIp())))
+        List<InboundRuleResponseDto> inboundRules = sg.ipPermissions()
+                .stream()
+                .flatMap(permission -> java.util.stream.Stream.concat(permission.ipRanges().stream() //ipv4
+                                        .map(ipRange -> new InboundRuleResponseDto(
+                                                permission.ipProtocol(),
+                                                permission.fromPort(),
+                                                permission.toPort(),
+                                                ipRange.cidrIp()
+                                        )),
+                                permission.ipv6Ranges().stream() //ipv6
+                                        .map(ipv6Range -> new InboundRuleResponseDto(
+                                                permission.ipProtocol(),
+                                                permission.fromPort(),
+                                                permission.toPort(),
+                                                ipv6Range.cidrIpv6()
+                                        ))
+                        )
+                )
                 .toList();
 
         return new SecurityGroupResponseDto(sg.groupId(), sg.groupName(), sg.description(), sg.vpcId(), inboundRules);
