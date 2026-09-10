@@ -23,11 +23,19 @@ public class RiskAnalyzerService {
                         securityGroup.groupName(),
                         "HIGH",
                         rule,
-                        null
+                        SecurityRuleUtil.getDescriptionForHighSeverity(inboundRule)
+                ));
+            }  else if (SecurityRuleUtil.isMediumSeverity(inboundRule)) {
+                String rule = SecurityRuleUtil.formatRule(inboundRule);
+                findings.add(new SecurityFindingResponseDto(
+                        securityGroup.groupId(),
+                        securityGroup.groupName(),
+                        "MEDIUM",
+                        rule,
+                        SecurityRuleUtil.getDescriptionForMediumSeverity(inboundRule)
                 ));
             }
         }
-
         return findings;
     }
 }
