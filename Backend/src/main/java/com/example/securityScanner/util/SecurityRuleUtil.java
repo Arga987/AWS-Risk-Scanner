@@ -1,12 +1,14 @@
 package com.example.securityScanner.util;
 
 import com.example.securityScanner.dto.InboundRuleResponseDto;
+import com.example.securityScanner.dto.SecurityFindingResponseDto;
 import com.example.securityScanner.dto.SecurityGroupResponseDto;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.net.InetAddress;
 
 public class SecurityRuleUtil {
 
@@ -142,6 +144,12 @@ public class SecurityRuleUtil {
         if (!containsHighRiskPort) {
             return false;
         }
+        if (isIpv6Cidr(rule.source())) {
+            if (isInternalIpv6(rule.source())) {
+                return false;
+            }
+            return isBroadIpv6Range(rule.source());
+        }
         return isBroadPrivateRange(rule.source());
     }
 
@@ -186,12 +194,31 @@ public class SecurityRuleUtil {
         return securityGroup.inboundRules().isEmpty();
     }
 
+    private static boolean isIpCidr(String cidr) {
+        if (cidr == null || !cidr.contains("/")) {
+            return false;
+        }
+        String[] parts = cidr.split("/");
+        if (parts.length != 2) {
+            return false;
+        }
+        try {
+            int prefixLength = Integer.parseInt(parts[1]);
+            InetAddress address = InetAddress.getByName(parts[0]);
+            int maxPrefixLength = address.getAddress().length * 8;
+            return prefixLength >= 0 && prefixLength <= maxPrefixLength;
+
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public static List<RedundantRule> findRedundantRules(SecurityGroupResponseDto securityGroup) {
         List<InboundRuleResponseDto> rules = securityGroup.inboundRules();
         List<RedundantRule> redundantRules = new ArrayList<>();
         for (int i = 0; i < rules.size(); i++) {
             InboundRuleResponseDto rule = rules.get(i);
-            if (!isIpv4Cidr(rule.source())) {
+            if (!isIpCidr(rule.source())) {
                 continue;
             }
             RedundantRule bestMatch = null;
@@ -203,7 +230,7 @@ public class SecurityRuleUtil {
                 if (!isSameProtocolAndPortRange(rule, otherRule)) {
                     continue;
                 }
-                if (!isIpv4Cidr(otherRule.source())) {
+                if (!isIpCidr(otherRule.source())) {
                     continue;
                 }
                 if (isCidrContained(rule.source(), otherRule.source())) {
@@ -227,66 +254,78 @@ public class SecurityRuleUtil {
         return Objects.equals(first.fromPort(), second.fromPort()) && Objects.equals(first.toPort(), second.toPort());
     }
 
-    private static boolean isIpv4Cidr(String cidr) {
-        if (cidr == null || !cidr.contains("/")) {
-            return false;
-        }
-        String[] parts = cidr.split("/");
-        if (parts.length != 2) {
-            return false;
-        }
-        String[] octets = parts[0].split("\\.");
-        if (octets.length != 4) {
-            return false;
-        }
+
+    private static boolean isCidrContained(String smallerCidr, String largerCidr) {
         try {
-            int prefixLength = Integer.parseInt(parts[1]);
-            if (prefixLength < 0 || prefixLength > 32) {
+            String[] smallerParts = smallerCidr.split("/");
+            String[] largerParts = largerCidr.split("/");
+            int smallerPrefix = Integer.parseInt(smallerParts[1]);
+            int largerPrefix = Integer.parseInt(largerParts[1]);
+            if (smallerPrefix <= largerPrefix) {
                 return false;
             }
-            for (String octet : octets) {
-                int value = Integer.parseInt(octet);
-                if (value < 0 || value > 255) {
+            InetAddress smallerAddress = InetAddress.getByName(smallerParts[0]);
+            InetAddress largerAddress = InetAddress.getByName(largerParts[0]);
+
+            byte[] smallerBytes = smallerAddress.getAddress();
+            byte[] largerBytes = largerAddress.getAddress();
+
+            if (smallerBytes.length != largerBytes.length) {
+                return false;
+            }
+            int fullBytes = largerPrefix / 8;
+            int remainingBits = largerPrefix % 8;
+            for (int i = 0; i < fullBytes; i++) {
+                if (smallerBytes[i] != largerBytes[i]) {
                     return false;
                 }
             }
+            if (remainingBits > 0) {
+                int mask = 0xFF << (8 - remainingBits);
+                return (smallerBytes[fullBytes] & mask) == (largerBytes[fullBytes] & mask);
+            }
             return true;
-        } catch (NumberFormatException e) {
+        } catch (Exception e) {
             return false;
         }
-    }
-
-    private static boolean isCidrContained(String smallerCidr, String largerCidr) {
-        String[] smallerParts = smallerCidr.split("/");
-        String[] largerParts = largerCidr.split("/");
-        int smallerPrefix = Integer.parseInt(smallerParts[1]);
-        int largerPrefix = Integer.parseInt(largerParts[1]);
-        if (smallerPrefix <= largerPrefix) {
-            return false;
-        }
-        long smallerNetwork = ipv4ToLong(smallerParts[0]);
-        long largerNetwork = ipv4ToLong(largerParts[0]);
-        long mask = createMask(largerPrefix);
-        return (smallerNetwork & mask) == (largerNetwork & mask);
-    }
-
-    private static long ipv4ToLong(String ip) {
-        String[] octets = ip.split("\\.");
-        long result = 0;
-        for (String octet : octets) {
-            result = (result << 8) + Integer.parseInt(octet);
-        }
-        return result;
-    }
-
-    private static long createMask(int prefixLength) {
-        if (prefixLength == 0) {
-            return 0;
-        }
-        return (0xFFFFFFFFL << (32 - prefixLength)) & 0xFFFFFFFFL;
     }
 
     public record RedundantRule(InboundRuleResponseDto redundantRule, InboundRuleResponseDto coveringRule) {
+    }
+
+    private static boolean isIpv6Cidr(String source) {
+        return source != null && source.contains(":") && source.contains("/");
+    }
+
+    private static boolean isInternalIpv6(String source) {
+        if (!isIpv6Cidr(source)) {
+            return false;
+        }
+        String ip = source.split("/")[0].toLowerCase();
+        return ip.startsWith("fc") || ip.startsWith("fd") || ip.startsWith("fe8") || ip.startsWith("fe9")
+                || ip.startsWith("fea") || ip.startsWith("feb") || ip.equals("::1");
+    }
+
+    private static boolean isBroadIpv6Range(String source) {
+        if (!isIpv6Cidr(source)) {
+            return false;
+        }
+        String[] parts = source.split("/");
+        int prefixLength = Integer.parseInt(parts[1]);
+        return prefixLength <= 56;
+    }
+
+    public static SecurityFindingResponseDto createFinding(SecurityGroupResponseDto securityGroup, String severity, String rule, String issue) {
+        return new SecurityFindingResponseDto(
+                securityGroup.groupId(),
+                securityGroup.groupName(),
+                securityGroup.description(),
+                securityGroup.vpcId(),
+                securityGroup.inboundRules().size(),
+                severity,
+                rule,
+                issue
+        );
     }
 
 }

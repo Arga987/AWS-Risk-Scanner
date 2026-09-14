@@ -16,9 +16,8 @@ public class RiskAnalyzerService {
 
         List<SecurityFindingResponseDto> findings = new ArrayList<>();
         if (SecurityRuleUtil.hasNoInboundRules(securityGroup)) {
-            findings.add(new SecurityFindingResponseDto(
-                    securityGroup.groupId(),
-                    securityGroup.groupName(),
+            findings.add(SecurityRuleUtil.createFinding(
+                    securityGroup,
                     "LOW",
                     "NO INBOUND RULES",
                     "This Security Group has no inbound rules and may be unused or unnecessary."
@@ -28,9 +27,8 @@ public class RiskAnalyzerService {
         for (SecurityRuleUtil.RedundantRule redundantRule : redundantRules) {
             InboundRuleResponseDto rule = redundantRule.redundantRule();
             InboundRuleResponseDto coveringRule = redundantRule.coveringRule();
-            findings.add(new SecurityFindingResponseDto(
-                    securityGroup.groupId(),
-                    securityGroup.groupName(),
+            findings.add(SecurityRuleUtil.createFinding(
+                    securityGroup,
                     "LOW",
                     SecurityRuleUtil.formatRuleWithSource(rule),
                     "This inbound rule is redundant because it is already covered by "
@@ -40,19 +38,17 @@ public class RiskAnalyzerService {
         }
         for (InboundRuleResponseDto inboundRule : securityGroup.inboundRules()) {
             if (SecurityRuleUtil.isHighSeverity(inboundRule)) {
-                String rule = SecurityRuleUtil.formatRule(inboundRule);
-                findings.add(new SecurityFindingResponseDto(
-                        securityGroup.groupId(),
-                        securityGroup.groupName(),
+                String rule = SecurityRuleUtil.formatRuleWithSource(inboundRule);
+                findings.add(SecurityRuleUtil.createFinding(
+                        securityGroup,
                         "HIGH",
                         rule,
                         SecurityRuleUtil.getDescriptionForHighSeverity(inboundRule)
                 ));
             }  else if (SecurityRuleUtil.isMediumSeverity(inboundRule)) {
-                String rule = SecurityRuleUtil.formatRule(inboundRule);
-                findings.add(new SecurityFindingResponseDto(
-                        securityGroup.groupId(),
-                        securityGroup.groupName(),
+                String rule = SecurityRuleUtil.formatRuleWithSource(inboundRule);
+                findings.add(SecurityRuleUtil.createFinding(
+                        securityGroup,
                         "MEDIUM",
                         rule,
                         SecurityRuleUtil.getDescriptionForMediumSeverity(inboundRule)
