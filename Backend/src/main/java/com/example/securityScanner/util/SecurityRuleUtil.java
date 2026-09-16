@@ -328,4 +328,11 @@ public class SecurityRuleUtil {
         );
     }
 
+    public record ScanResult(
+            List<SecurityFindingResponseDto> findings,
+            int highCount,
+            int mediumCount,
+            int lowCount
+    ) {}
+
 }

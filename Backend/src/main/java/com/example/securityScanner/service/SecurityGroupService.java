@@ -9,6 +9,7 @@ import software.amazon.awssdk.services.ec2.model.SecurityGroup;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.example.securityScanner.util.SecurityRuleUtil.*;
 
 @Service
 public class SecurityGroupService {
@@ -24,13 +25,22 @@ public class SecurityGroupService {
         return ec2Client.describeSecurityGroups().securityGroups().stream().map(this::mapToResponse).toList();
     }
 
-    public List<SecurityFindingResponseDto> scanSecurityGroups() {
+    public ScanResult scanSecurityGroups(){
+        int highCount = 0;int mediumCount = 0;int lowCount = 0;
         List<SecurityGroupResponseDto> securityGroups = getSecurityGroups();
         List<SecurityFindingResponseDto> findings = new ArrayList<>();
         for (SecurityGroupResponseDto securityGroup : securityGroups) {
-            findings.addAll(riskAnalyzerService.analyze(securityGroup));
+            List<SecurityFindingResponseDto> securityGroupFindings = riskAnalyzerService.analyze(securityGroup);
+            findings.addAll(securityGroupFindings);
+            for (SecurityFindingResponseDto finding : securityGroupFindings) {
+                switch (finding.severity()) {
+                    case "HIGH" -> highCount++;
+                    case "MEDIUM" -> mediumCount++;
+                    case "LOW" -> lowCount++;
+                }
+            }
         }
-        return findings;
+        return new ScanResult(findings, highCount, mediumCount, lowCount);
     }
 
     private SecurityGroupResponseDto mapToResponse(SecurityGroup sg) {
