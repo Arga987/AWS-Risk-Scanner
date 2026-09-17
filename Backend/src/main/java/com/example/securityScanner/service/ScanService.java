@@ -1,6 +1,8 @@
 package com.example.securityScanner.service;
 
 import com.example.securityScanner.dto.AccountDto;
+import com.example.securityScanner.dto.ScanSummaryDto;
+import com.example.securityScanner.dto.SecurityFindingResponseDto;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -19,13 +21,16 @@ public class ScanService {
         this.securityGroupService = securityGroupService;
     }
 
-    public String startScan() {
+    public ScanSummaryDto startScan() {
         String accountUuid = UUID.randomUUID().toString();
         String accountName = accountInformationService.getAccountName();
         AccountDto accountDto = new AccountDto(accountUuid, "ACCOUNT", accountName, Instant.now().toString(), 0, 0, 0);
         dynamoDbService.saveAccount(accountDto);
         ScanResult scanResult = securityGroupService.scanSecurityGroups();
         dynamoDbService.updateAccountCounts(accountUuid, scanResult.highCount(), scanResult.mediumCount(), scanResult.lowCount());
-        return accountUuid;
+        for (SecurityFindingResponseDto finding : scanResult.findings()) {
+            dynamoDbService.saveSecurityGroup(accountUuid, finding);
+        }
+        return new ScanSummaryDto(accountUuid, scanResult.highCount(), scanResult.mediumCount(), scanResult.lowCount());
     }
 }

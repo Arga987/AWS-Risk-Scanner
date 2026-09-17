@@ -1,11 +1,15 @@
 package com.example.securityScanner.controller;
 
+import com.example.securityScanner.dto.ScanSummaryDto;
+import com.example.securityScanner.dto.SecurityFindingResponseDto;
 import com.example.securityScanner.dto.SecurityGroupResponseDto;
 import com.example.securityScanner.service.AccountInformationService;
 import com.example.securityScanner.service.DynamoDbService;
 import com.example.securityScanner.service.ScanService;
 import com.example.securityScanner.service.SecurityGroupService;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -38,8 +42,16 @@ public class SecurityGroupController {
 //        return securityGroupService.scanSecurityGroups();
 //    }
 
-    @GetMapping("/test-scan")
-    public String testScan() {
+    @PostMapping("/security-groups/scan")
+    public ScanSummaryDto scanSecurityGroups() {
         return scanService.startScan();
+    }
+
+    @GetMapping("/accounts/security-groups")
+    public List<SecurityFindingResponseDto> getSecurityGroups(
+            @RequestParam String accountUuid,
+            @RequestParam(required = false) String severity
+    ) {
+        return dynamoDbService.getSecurityGroups(accountUuid, severity);
     }
 }
