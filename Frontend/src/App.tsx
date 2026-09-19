@@ -1,11 +1,19 @@
-import { Button } from "@/components/ui/button"
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import Home from "./pages/Home";
+import History from "./pages/History";
 
-function App() {
+const App = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <Button>Scan AWS Account</Button>
-    </div>
-  )
-}
+    <BrowserRouter>
+      <Navbar />
 
-export default App
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/history" element={<History />} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
+
+export default App;
