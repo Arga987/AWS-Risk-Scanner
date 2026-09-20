@@ -1,23 +1,39 @@
 import { useState } from "react";
+import axios from "axios";
 import PageShell from "../components/PageShell";
 import { Button } from "@/components/ui/button";
+import type { ScanSummaryDto } from "@/interfaces/SecurityGroupInterfaces";
+import api from "@/API";
+import SecurityGroupFindings from "@/components/SecurityGroupFindings/SecurityGroupFindings";
 
 const Home = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
+  const [scanSummary, setScanSummary] = useState<ScanSummaryDto | null>(null);
+  const [showFindings, setShowFindings] = useState(false);
 
-  const handleScan = () => {
+  const handleScan = async () => {
     setIsScanning(true);
 
-    setTimeout(() => {
-      setIsScanning(false);
+    try {
+      const response = await axios.post<ScanSummaryDto>(
+        api.SECURITY_GROUP.SCAN
+      );
+
+      setScanSummary(response.data);
       setScanComplete(true);
-    }, 2000);
+    } catch (error) {
+      console.error("Scan failed:", error);
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   return (
     <PageShell>
-      {isScanning ? (
+      {showFindings ? (
+        <SecurityGroupFindings accountUuid={scanSummary.accountUuid} />
+      ) : isScanning ? (
         <div className="flex min-h-[calc(100vh-6rem)] items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-black" />
@@ -41,10 +57,7 @@ const Home = () => {
                   Group rules and security issues.
                 </p>
 
-                <Button
-                  className="mt-8 cursor-pointer"
-                  onClick={handleScan}
-                >
+                <Button className="mt-8 cursor-pointer" onClick={handleScan}>
                   Scan AWS Account
                 </Button>
               </div>
@@ -65,32 +78,26 @@ const Home = () => {
               {/* Severity Counts */}
               <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-                  <p className="text-sm font-medium text-red-700">
-                    HIGH
-                  </p>
+                  <p className="text-sm font-medium text-red-700">HIGH</p>
 
                   <p className="mt-2 text-3xl font-semibold text-red-800">
-                    4
+                    {scanSummary?.highCount}
                   </p>
                 </div>
 
                 <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-6 text-center">
-                  <p className="text-sm font-medium text-yellow-700">
-                    MEDIUM
-                  </p>
+                  <p className="text-sm font-medium text-yellow-700">MEDIUM</p>
 
                   <p className="mt-2 text-3xl font-semibold text-yellow-800">
-                    5
+                    {scanSummary?.mediumCount}
                   </p>
                 </div>
 
                 <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center">
-                  <p className="text-sm font-medium text-green-700">
-                    LOW
-                  </p>
+                  <p className="text-sm font-medium text-green-700">LOW</p>
 
                   <p className="mt-2 text-3xl font-semibold text-green-800">
-                    3
+                    {scanSummary?.lowCount}
                   </p>
                 </div>
               </div>
@@ -101,7 +108,10 @@ const Home = () => {
                   Click below to view the detailed findings
                 </p>
 
-                <Button className="mt-3 cursor-pointer">
+                <Button
+                  className="mt-3 cursor-pointer"
+                  onClick={() => setShowFindings(true)}
+                >
                   View Findings
                 </Button>
               </div>
