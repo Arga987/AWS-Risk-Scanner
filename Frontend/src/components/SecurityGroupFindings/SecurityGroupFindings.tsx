@@ -34,7 +34,7 @@ type Props = {
 const SecurityGroupFindings = (props: Props) => {
   const { accountUuid } = props;
   const [search, setSearch] = useState("");
-  const [severity, setSeverity] = useState("ALL");
+  const [selectedSeverity, setSelectedSeverity] = useState<string>("ALL");
   const [data, setData] = useState<Findings[]>([]);
 
   const table = useReactTable({
@@ -45,16 +45,10 @@ const SecurityGroupFindings = (props: Props) => {
 
   const handleSearch = (value: string) => {
     setSearch(value);
-
-    // Later:
-    // Send search value to backend
   };
 
   const handleSeverityChange = (value: string) => {
-    setSeverity(value);
-
-    // Later:
-    // Send severity value to backend
+    setSelectedSeverity(value);
   };
 
   const fetchFindings = async () => {
@@ -64,6 +58,9 @@ const SecurityGroupFindings = (props: Props) => {
         {
           params: {
             accountUuid,
+            ...(selectedSeverity !== "ALL" && {
+              severity: selectedSeverity,
+            }),
           },
         }
       );
@@ -76,7 +73,7 @@ const SecurityGroupFindings = (props: Props) => {
 
   useEffect(() => {
     fetchFindings();
-  }, [accountUuid]);
+  }, [accountUuid, selectedSeverity]);
 
   return (
     <div className="px-6 py-10">
@@ -97,7 +94,7 @@ const SecurityGroupFindings = (props: Props) => {
           className="max-w-sm cursor-text caret-black"
         />
 
-        <Select value={severity} onValueChange={handleSeverityChange}>
+        <Select value={selectedSeverity} onValueChange={handleSeverityChange}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Severity" />
           </SelectTrigger>
