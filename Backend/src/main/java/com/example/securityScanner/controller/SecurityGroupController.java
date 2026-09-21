@@ -1,7 +1,7 @@
 package com.example.securityScanner.controller;
 
+import com.example.securityScanner.dto.ScanFindingsResponseDto;
 import com.example.securityScanner.dto.ScanSummaryDto;
-import com.example.securityScanner.dto.SecurityFindingResponseDto;
 import com.example.securityScanner.dto.SecurityGroupResponseDto;
 import com.example.securityScanner.service.AccountInformationService;
 import com.example.securityScanner.service.DynamoDbService;
@@ -48,10 +48,13 @@ public class SecurityGroupController {
     }
 
     @GetMapping("/accounts/security-groups")
-    public List<SecurityFindingResponseDto> getSecurityGroups(
+    public ScanFindingsResponseDto getSecurityGroups(
             @RequestParam String accountUuid,
-            @RequestParam(required = false) String severity
+            @RequestParam(required = false) String severity,
+            @RequestParam(required = false) String searchString,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) String pageToken
     ) {
-        return dynamoDbService.getSecurityGroups(accountUuid, severity);
+        return dynamoDbService.getSecurityGroups(accountUuid, severity, searchString, pageSize, pageToken);
     }
 }

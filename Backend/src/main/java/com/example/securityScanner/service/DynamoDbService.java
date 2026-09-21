@@ -1,15 +1,14 @@
 package com.example.securityScanner.service;
 
 import com.example.securityScanner.dto.AccountDto;
+import com.example.securityScanner.dto.ScanFindingsResponseDto;
 import com.example.securityScanner.dto.SecurityFindingResponseDto;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 @Service
 public class DynamoDbService {
@@ -57,7 +56,7 @@ public class DynamoDbService {
         item.put("accountUuid", AttributeValue.builder().s(accountUuid).build());
         item.put("entityKey", AttributeValue.builder().s(entityKey).build());
         item.put("securityGroupId", AttributeValue.builder().s(finding.securityGroupId()).build());
-        item.put("securityGroupName", AttributeValue.builder().s(finding.securityGroupName()).build());
+        item.put("securityGroupName", AttributeValue.builder().s(finding.securityGroupName().toLowerCase(Locale.ROOT)).build());
         item.put("securityGroupDescription", AttributeValue.builder().s(finding.securityGroupDescription()).build());
         item.put("vpcId", AttributeValue.builder().s(finding.vpcId()).build());
         item.put("inboundRuleCount", AttributeValue.builder().n(String.valueOf(finding.inboundRuleCount())).build());
@@ -70,23 +69,50 @@ public class DynamoDbService {
         dynamoDbClient.putItem(request);
     }
 
-    public List<SecurityFindingResponseDto> getSecurityGroups(String accountUuid, String severity) {
+    public ScanFindingsResponseDto getSecurityGroups(String accountUuid, String severity, String searchString, Integer pageSize, String pageToken) {
 
         Map<String, AttributeValue> values = new HashMap<>();
+        List<SecurityFindingResponseDto> findings = new ArrayList<>();
+        Map<String, AttributeValue> exclusiveStartKey = null;
+        Map<String, AttributeValue> lastEvaluatedKey;
         values.put(":accountUuid", AttributeValue.builder().s(accountUuid).build());
         values.put(":prefix", AttributeValue.builder().s("SG#").build());
-        QueryRequest.Builder requestBuilder = QueryRequest.builder()
-                .tableName("security-scanner")
-                .keyConditionExpression(
-                        "accountUuid = :accountUuid AND begins_with(entityKey, :prefix)"
-                );
-        if (severity != null) {
+        List<String> filters = new ArrayList<>();
+        if (severity != null && !severity.isBlank()) {
             values.put(":severity", AttributeValue.builder().s(severity).build());
-            requestBuilder.filterExpression("severity = :severity");
+            filters.add("severity = :severity");
         }
-        requestBuilder.expressionAttributeValues(values);
-        QueryResponse response = dynamoDbClient.query(requestBuilder.build());
-        return response.items().stream().map(this::mapToSecurityFinding).toList();
+
+        if (searchString != null && !searchString.isBlank()) {
+            String normalizedSearchString = searchString.toLowerCase();
+            values.put(":searchString", AttributeValue.builder().s(normalizedSearchString).build());
+            filters.add("contains(securityGroupId, :searchString) " + "OR contains(securityGroupName, :searchString)");
+        }
+
+        if (pageToken != null && !pageToken.isBlank()) {
+            exclusiveStartKey = decodePageToken(pageToken);
+        }
+
+        do {
+            QueryRequest.Builder requestBuilder = QueryRequest.builder().tableName("security-scanner").keyConditionExpression("accountUuid = :accountUuid AND begins_with(entityKey, :prefix)").limit(pageSize - findings.size()).expressionAttributeValues(values);
+            if (!filters.isEmpty()) {
+                requestBuilder.filterExpression(String.join(" AND ", filters));
+            }
+            if (exclusiveStartKey != null) {
+                requestBuilder.exclusiveStartKey(exclusiveStartKey);
+            }
+            QueryResponse response = dynamoDbClient.query(requestBuilder.build());
+            findings.addAll(response.items().stream().map(this::mapToSecurityFinding).toList());
+            lastEvaluatedKey = response.lastEvaluatedKey();
+            exclusiveStartKey = lastEvaluatedKey;
+        } while (findings.size() < pageSize && lastEvaluatedKey != null && !lastEvaluatedKey.isEmpty());
+        String nextPageToken = null;
+        if (lastEvaluatedKey != null && !lastEvaluatedKey.isEmpty()) {
+            if (hasNextPage(lastEvaluatedKey, values, filters)) {
+                nextPageToken = encodePageToken(lastEvaluatedKey);
+            }
+        }
+        return new ScanFindingsResponseDto(findings.subList(0, Math.min(findings.size(), pageSize)), nextPageToken);
     }
 
     private SecurityFindingResponseDto mapToSecurityFinding(Map<String, AttributeValue> item) {
@@ -101,6 +127,45 @@ public class DynamoDbService {
                 item.get("rule").s(),
                 item.get("issue").s()
         );
+    }
+
+    private String encodePageToken(Map<String, AttributeValue> lastEvaluatedKey) {
+        String accountUuid = lastEvaluatedKey.get("accountUuid").s();
+        String entityKey = lastEvaluatedKey.get("entityKey").s();
+        String token = accountUuid + "|" + entityKey;
+        return Base64.getEncoder().encodeToString(token.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private Map<String, AttributeValue> decodePageToken(String pageToken) {
+        String decodedToken = new String(Base64.getDecoder().decode(pageToken), StandardCharsets.UTF_8);
+        String[] parts = decodedToken.split("\\|", 2);
+        Map<String, AttributeValue> exclusiveStartKey = new HashMap<>();
+        exclusiveStartKey.put("accountUuid", AttributeValue.builder().s(parts[0]).build());
+        exclusiveStartKey.put("entityKey", AttributeValue.builder().s(parts[1]).build());
+        return exclusiveStartKey;
+    }
+
+    private boolean hasNextPage(Map<String, AttributeValue> lastEvaluatedKey, Map<String, AttributeValue> values, List<String> filters) {
+
+        Map<String, AttributeValue> exclusiveStartKey = lastEvaluatedKey;
+        do {
+            QueryRequest.Builder requestBuilder = QueryRequest.builder()
+                    .tableName("security-scanner")
+                    .keyConditionExpression(
+                            "accountUuid = :accountUuid AND begins_with(entityKey, :prefix)")
+                    .expressionAttributeValues(values).exclusiveStartKey(exclusiveStartKey).limit(1);
+            if (!filters.isEmpty()) {
+                requestBuilder.filterExpression(String.join(" AND ", filters));
+            }
+            QueryResponse response = dynamoDbClient.query(requestBuilder.build());
+            if (!response.items().isEmpty()) {
+                return true;
+            }
+            if (!response.hasLastEvaluatedKey()) {
+                return false;
+            }
+            exclusiveStartKey = response.lastEvaluatedKey();
+        } while (true);
     }
 
 }
