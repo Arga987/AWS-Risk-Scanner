@@ -324,7 +324,8 @@ public class SecurityRuleUtil {
                 securityGroup.inboundRules().size(),
                 severity,
                 rule,
-                issue
+                issue,
+                null
         );
     }
 

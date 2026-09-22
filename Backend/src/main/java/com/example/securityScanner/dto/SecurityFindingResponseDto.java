@@ -8,6 +8,7 @@ public record SecurityFindingResponseDto(
         Integer inboundRuleCount,
         String severity,
         String rule,
-        String issue
+        String issue,
+        String findingUuid
 ) {
 }

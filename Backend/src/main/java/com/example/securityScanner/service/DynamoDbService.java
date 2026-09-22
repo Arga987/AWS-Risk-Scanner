@@ -86,7 +86,7 @@ public class DynamoDbService {
         if (searchString != null && !searchString.isBlank()) {
             String normalizedSearchString = searchString.toLowerCase();
             values.put(":searchString", AttributeValue.builder().s(normalizedSearchString).build());
-            filters.add("contains(securityGroupId, :searchString) " + "OR contains(securityGroupName, :searchString)");
+            filters.add("(contains(securityGroupId, :searchString) " + "OR contains(securityGroupName, :searchString))");
         }
 
         if (pageToken != null && !pageToken.isBlank()) {
@@ -125,7 +125,8 @@ public class DynamoDbService {
                 Integer.parseInt(item.get("inboundRuleCount").n()),
                 item.get("severity").s(),
                 item.get("rule").s(),
-                item.get("issue").s()
+                item.get("issue").s(),
+                item.get("entityKey").s()
         );
     }
 

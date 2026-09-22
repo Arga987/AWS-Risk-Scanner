@@ -5,7 +5,7 @@ export interface ScanSummaryDto {
   lowCount: number;
 }
 
-export interface Findings {
+export interface SecurityGroupFinding {
   securityGroupId: string;
   securityGroupName: string;
   vpcId: string;
@@ -13,4 +13,9 @@ export interface Findings {
   severity: "HIGH" | "MEDIUM" | "LOW";
   rule: string;
   issue: string;
+}
+
+export interface SecurityGroupFindingsResponse {
+  findings: SecurityGroupFinding[];
+  nextPageToken: string | null;
 }
