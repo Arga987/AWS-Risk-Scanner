@@ -1,6 +1,7 @@
 package com.example.securityScanner.service;
 
 import com.example.securityScanner.dto.AccountDto;
+import com.example.securityScanner.dto.RemediationResponseDto;
 import com.example.securityScanner.dto.ScanFindingsResponseDto;
 import com.example.securityScanner.dto.SecurityFindingResponseDto;
 import org.springframework.stereotype.Service;
@@ -13,9 +14,11 @@ import java.util.*;
 @Service
 public class DynamoDbService {
     private final DynamoDbClient dynamoDbClient;
+    private final RemediationService remediationService;
 
-    public DynamoDbService(DynamoDbClient dynamoDbClient) {
+    public DynamoDbService(DynamoDbClient dynamoDbClient, RemediationService remediationService) {
         this.dynamoDbClient = dynamoDbClient;
+        this.remediationService = remediationService;
     }
 
     public void saveAccount(AccountDto accountDto) {
@@ -113,6 +116,31 @@ public class DynamoDbService {
             }
         }
         return new ScanFindingsResponseDto(findings.subList(0, Math.min(findings.size(), pageSize)), nextPageToken);
+    }
+
+    public RemediationResponseDto getRemediation(String accountUuid, String sgUuid) {
+        Map<String, AttributeValue> key = new HashMap<>();
+        key.put("accountUuid", AttributeValue.builder().s(accountUuid).build());
+        key.put("entityKey", AttributeValue.builder().s(sgUuid).build());
+        GetItemRequest request = GetItemRequest.builder().tableName("security-scanner").key(key).build();
+        GetItemResponse response = dynamoDbClient.getItem(request);
+        Map<String, AttributeValue> item = response.item();
+        String rule = item.get("rule").s();
+        String issue = item.get("issue").s();
+        String reason = item.containsKey("reason") ? item.get("reason").s() : null;
+        String solution = item.containsKey("solution") ? item.get("solution").s() : null;
+        if (reason != null && solution != null) {
+            return new RemediationResponseDto(sgUuid, issue, reason, solution);
+        }
+        RemediationResponseDto remediation = remediationService.generateRemediation(rule, issue);
+        Map<String, AttributeValue> values = new HashMap<>();
+        reason = remediation.reason();
+        solution = remediation.solution();
+        values.put(":reason", AttributeValue.builder().s(remediation.reason()).build());
+        values.put(":solution", AttributeValue.builder().s(remediation.solution()).build());
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder().tableName("security-scanner").key(key).updateExpression("SET reason = :reason, solution = :solution").expressionAttributeValues(values).build();
+        dynamoDbClient.updateItem(updateRequest);
+        return new RemediationResponseDto(sgUuid, issue, reason, solution);
     }
 
     private SecurityFindingResponseDto mapToSecurityFinding(Map<String, AttributeValue> item) {
