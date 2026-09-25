@@ -73,7 +73,12 @@ public class DynamoDbService {
     }
 
     public ScanFindingsResponseDto getSecurityGroups(String accountUuid, String severity, String searchString, Integer pageSize, String pageToken) {
-
+        if (!accountExists(accountUuid)) {
+            throw new RuntimeException("Account not found");
+        }
+        if (pageSize <= 0) {
+            throw new IllegalArgumentException("Page size must be greater than 0");
+        }
         Map<String, AttributeValue> values = new HashMap<>();
         List<SecurityFindingResponseDto> findings = new ArrayList<>();
         Map<String, AttributeValue> exclusiveStartKey = null;
@@ -119,28 +124,36 @@ public class DynamoDbService {
     }
 
     public RemediationResponseDto getRemediation(String accountUuid, String sgUuid) {
+        if (!accountExists(accountUuid)) {
+            throw new RuntimeException("Account not found");
+        }
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("accountUuid", AttributeValue.builder().s(accountUuid).build());
         key.put("entityKey", AttributeValue.builder().s(sgUuid).build());
         GetItemRequest request = GetItemRequest.builder().tableName("security-scanner").key(key).build();
         GetItemResponse response = dynamoDbClient.getItem(request);
         Map<String, AttributeValue> item = response.item();
+        if (item == null || item.isEmpty()) {
+            throw new RuntimeException("Security group finding not found");
+        }
         String rule = item.get("rule").s();
         String issue = item.get("issue").s();
-        String reason = item.containsKey("reason") ? item.get("reason").s() : null;
-        String solution = item.containsKey("solution") ? item.get("solution").s() : null;
+        List<String> reason = item.containsKey("reason") ? item.get("reason").l().stream().map(AttributeValue::s).toList() : null;
+        List<String> solution = item.containsKey("solution") ? item.get("solution").l().stream().map(AttributeValue::s).toList() : null;
         if (reason != null && solution != null) {
-            return new RemediationResponseDto(sgUuid, issue, reason, solution);
+            return new RemediationResponseDto(issue, reason, solution);
         }
         RemediationResponseDto remediation = remediationService.generateRemediation(rule, issue);
         Map<String, AttributeValue> values = new HashMap<>();
         reason = remediation.reason();
         solution = remediation.solution();
-        values.put(":reason", AttributeValue.builder().s(remediation.reason()).build());
-        values.put(":solution", AttributeValue.builder().s(remediation.solution()).build());
+        values.put(":reason", AttributeValue.builder().l(remediation.reason().stream().map(
+                reasonItem -> AttributeValue.builder().s(reasonItem).build()).toList()).build());
+        values.put(":solution", AttributeValue.builder().l(remediation.solution().stream().map(solutionItem ->
+                                        AttributeValue.builder().s(solutionItem).build()).toList()).build());
         UpdateItemRequest updateRequest = UpdateItemRequest.builder().tableName("security-scanner").key(key).updateExpression("SET reason = :reason, solution = :solution").expressionAttributeValues(values).build();
         dynamoDbClient.updateItem(updateRequest);
-        return new RemediationResponseDto(sgUuid, issue, reason, solution);
+        return new RemediationResponseDto(issue, reason, solution);
     }
 
     private SecurityFindingResponseDto mapToSecurityFinding(Map<String, AttributeValue> item) {
@@ -195,6 +208,16 @@ public class DynamoDbService {
             }
             exclusiveStartKey = response.lastEvaluatedKey();
         } while (true);
+    }
+
+    private boolean accountExists(String accountUuid) {
+
+        Map<String, AttributeValue> key = new HashMap<>();
+        key.put("accountUuid", AttributeValue.builder().s(accountUuid).build());
+        key.put("entityKey", AttributeValue.builder().s("ACCOUNT").build());
+        GetItemRequest request = GetItemRequest.builder().tableName("security-scanner").key(key).projectionExpression("accountUuid").build();
+        GetItemResponse response = dynamoDbClient.getItem(request);
+        return response.hasItem();
     }
 
 }

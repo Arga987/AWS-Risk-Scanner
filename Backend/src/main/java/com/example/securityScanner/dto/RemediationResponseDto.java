@@ -1,8 +1,9 @@
 package com.example.securityScanner.dto;
 
+import java.util.List;
+
 public record RemediationResponseDto(
-        String sgUuid,
         String issue,
-        String reason,
-        String solution
+        List<String> reason,
+        List<String> solution
 ) {}
