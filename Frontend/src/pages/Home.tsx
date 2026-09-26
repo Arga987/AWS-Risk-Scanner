@@ -5,15 +5,18 @@ import { Button } from "@/components/ui/button";
 import type { ScanSummaryDto } from "@/interfaces/SecurityGroupInterfaces";
 import api from "@/API";
 import SecurityGroupFindings from "@/components/SecurityGroupFindings/SecurityGroupFindings";
+import ErrorMessage from "@/util/ErrorMessage";
 
 const Home = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
   const [scanSummary, setScanSummary] = useState<ScanSummaryDto | null>(null);
   const [showFindings, setShowFindings] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleScan = async () => {
     setIsScanning(true);
+    setErrorMessage(null);
 
     try {
       const response = await axios.post<ScanSummaryDto>(
@@ -24,6 +27,7 @@ const Home = () => {
       setScanComplete(true);
     } catch (error) {
       console.error("Scan failed:", error);
+      setErrorMessage("Something went wrong. Please try again later.");
     } finally {
       setIsScanning(false);
     }
@@ -45,6 +49,12 @@ const Home = () => {
         </div>
       ) : (
         <div className="flex flex-col items-center px-6 py-16">
+          {errorMessage && (
+            <div className="mb-6 w-full max-w-2xl">
+              <ErrorMessage message={errorMessage} />
+            </div>
+          )}
+
           {!scanComplete ? (
             <div className="mt-12 w-full max-w-2xl rounded-lg border bg-white p-8 shadow-sm">
               <div className="flex flex-col items-center text-center">

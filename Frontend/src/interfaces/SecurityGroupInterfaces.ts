@@ -13,9 +13,16 @@ export interface SecurityGroupFinding {
   severity: "HIGH" | "MEDIUM" | "LOW";
   rule: string;
   issue: string;
+  findingUuid: string;
 }
 
 export interface SecurityGroupFindingsResponse {
   findings: SecurityGroupFinding[];
   nextPageToken: string | null;
+}
+
+export interface RemediationResponseDto {
+  issue: string;
+  reason: string[];
+  solution: string[];
 }

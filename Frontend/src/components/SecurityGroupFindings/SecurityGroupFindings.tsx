@@ -27,8 +27,10 @@ import type {
   SecurityGroupFinding,
   SecurityGroupFindingsResponse,
 } from "@/interfaces/SecurityGroupInterfaces";
-import { SecurityGroupFindingsColumns } from "@/components/SecurityGroupFindings/SecurityGroupFindingsUtils";
+import { getSecurityGroupFindingsColumns } from "@/components/SecurityGroupFindings/SecurityGroupFindingsUtils";
 import { Button } from "@base-ui/react/button";
+import RemediationDialog from "./RemediationDialog";
+import ErrorMessage from "@/util/ErrorMessage";
 
 type Props = {
   accountUuid: string;
@@ -44,15 +46,31 @@ const SecurityGroupFindings = (props: Props) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isRemediationOpen, setIsRemediationOpen] = useState(false);
+  const [selectedFinding, setSelectedFinding] =
+    useState<SecurityGroupFinding | null>(null);
+
+  const handleViewRemediation = (finding: SecurityGroupFinding) => {
+    setSelectedFinding(finding);
+    setIsRemediationOpen(true);
+  };
+
+  const columns = getSecurityGroupFindingsColumns(handleViewRemediation);
 
   const table = useReactTable({
     data,
-    columns: SecurityGroupFindingsColumns,
+    columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
   const handleSearchChange = (value: string) => {
     setSearchString(value);
+  };
+
+  const handleCloseRemediation = () => {
+    setIsRemediationOpen(false);
+    setSelectedFinding(null);
   };
 
   const handlePageSizeChange = (value: string) => {
@@ -101,6 +119,7 @@ const SecurityGroupFindings = (props: Props) => {
     const severity =
       requestedSeverity === "ALL" ? undefined : requestedSeverity;
     setIsLoading(true);
+    setErrorMessage(null);
     try {
       const response = await axios.get<SecurityGroupFindingsResponse>(
         api.SECURITY_GROUP.FINDINGS,
@@ -119,6 +138,7 @@ const SecurityGroupFindings = (props: Props) => {
       setNextPageToken(response.data.nextPageToken);
     } catch (error) {
       console.error("Failed to fetch findings:", error);
+      setErrorMessage("Something went wrong. Please try again later.");
     } finally {
       setIsLoading(false);
     }
@@ -180,110 +200,126 @@ const SecurityGroupFindings = (props: Props) => {
         </Select>
       </div>
 
-      {/* Table */}
-      <div className="mt-3 rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className="bg-gray-100 text-gray-700"
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
+      {errorMessage ? (
+        <div className="mt-3">
+          <ErrorMessage message={errorMessage} />
+        </div>
+      ) : (
+        <>
+          {/* Table */}
+          <div className="mt-3 rounded-md border">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead
+                        key={header.id}
+                        className="bg-gray-100 text-gray-700"
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    ))}
+                  </TableRow>
                 ))}
-              </TableRow>
-            ))}
-          </TableHeader>
+              </TableHeader>
 
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={SecurityGroupFindingsColumns.length}
-                  className="h-24 text-center"
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Loading findings...
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Loading findings...
+                      </div>
                     </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={SecurityGroupFindingsColumns.length}
-                  className="h-24 text-center"
-                >
-                  No findings found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+                  </TableRow>
+                ) : table.getRowModel().rows.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow key={row.id}>
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center"
+                    >
+                      No findings found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
 
-      {/* Pagination */}
-      <div className="mt-4 flex items-center justify-end gap-4">
-        <p className="text-sm text-muted-foreground">Page {currentPage}</p>
+          {/* Pagination */}
+          <div className="mt-4 flex items-center justify-end gap-4">
+            <p className="text-sm text-muted-foreground">Page {currentPage}</p>
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Size:</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Size:</span>
 
-          <Select
-            value={pageSize.toString()}
-            onValueChange={handlePageSizeChange}
-          >
-            <SelectTrigger className="w-[80px]">
-              <SelectValue />
-            </SelectTrigger>
+              <Select
+                value={pageSize.toString()}
+                onValueChange={handlePageSizeChange}
+              >
+                <SelectTrigger className="w-[80px]">
+                  <SelectValue />
+                </SelectTrigger>
 
-            <SelectContent>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="20">20</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className="flex gap-2">
-          <Button
-            disabled={currentPage === 1}
-            onClick={handlePrevious}
-            className="cursor-pointer rounded-full border border-gray-400 bg-white px-6 text-black shadow-md hover:bg-gray-100 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 disabled:opacity-60 disabled:hover:bg-gray-200"
-          >
-            Previous
-          </Button>
+            <div className="flex gap-2">
+              <Button
+                disabled={currentPage === 1}
+                onClick={handlePrevious}
+                className="cursor-pointer rounded-full border border-gray-400 bg-white px-6 text-black shadow-md hover:bg-gray-100 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 disabled:opacity-60 disabled:hover:bg-gray-200"
+              >
+                Previous
+              </Button>
 
-          <Button
-            disabled={!nextPageToken}
-            onClick={handleNext}
-            className="cursor-pointer rounded-full border-0 bg-emerald-400 px-6 text-white shadow-md hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 disabled:opacity-70 disabled:hover:bg-gray-300"
-          >
-            Next
-          </Button>
-        </div>
-      </div>
+              <Button
+                disabled={!nextPageToken}
+                onClick={handleNext}
+                className="cursor-pointer rounded-full border-0 bg-emerald-400 px-6 text-white shadow-md hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 disabled:opacity-70 disabled:hover:bg-gray-300"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
+      {isRemediationOpen && (
+        <RemediationDialog
+          open={isRemediationOpen}
+          onClose={handleCloseRemediation}
+          finding={selectedFinding}
+          accountUuid={accountUuid}
+        />
+      )}
     </div>
   );
 };

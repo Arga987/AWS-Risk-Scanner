@@ -1,7 +1,16 @@
-import type { Findings } from "@/interfaces/SecurityGroupInterfaces";
+import type { SecurityGroupFinding } from "@/interfaces/SecurityGroupInterfaces";
 import type { ColumnDef } from "@tanstack/react-table";
+import { Button } from "../ui/button";
 
-export const SecurityGroupFindingsColumns: ColumnDef<Findings>[] = [
+export const severityStyles = {
+  HIGH: "bg-red-50 text-red-700",
+  MEDIUM: "bg-yellow-50 text-yellow-700",
+  LOW: "bg-green-50 text-green-700",
+};
+
+export const getSecurityGroupFindingsColumns = (
+  onViewRemediation: (finding: SecurityGroupFinding) => void
+): ColumnDef<SecurityGroupFinding>[] => [
   {
     accessorKey: "securityGroupId",
     header: "Security Group ID",
@@ -43,13 +52,9 @@ export const SecurityGroupFindingsColumns: ColumnDef<Findings>[] = [
     accessorKey: "severity",
     header: "Severity",
     cell: ({ row }) => {
-      const severity = row.getValue("severity") as Findings["severity"];
-
-      const severityStyles = {
-        HIGH: "bg-red-50 text-red-700",
-        MEDIUM: "bg-yellow-50 text-yellow-700",
-        LOW: "bg-green-50 text-green-700",
-      };
+      const severity = row.getValue(
+        "severity"
+      ) as SecurityGroupFinding["severity"];
 
       return (
         <div className={`font-medium ${severityStyles[severity]}`}>
@@ -57,5 +62,19 @@ export const SecurityGroupFindingsColumns: ColumnDef<Findings>[] = [
         </div>
       );
     },
+  },
+  {
+    id: "remediation",
+    header: "Remediation",
+    cell: ({ row }) => (
+      <Button
+        variant="outline"
+        size="sm"
+        className="cursor-pointer rounded-full border-0 bg-blue-400 px-6 text-white shadow-md hover:bg-blue-200"
+        onClick={() => onViewRemediation(row.original)}
+      >
+        View Remediation
+      </Button>
+    ),
   },
 ];
