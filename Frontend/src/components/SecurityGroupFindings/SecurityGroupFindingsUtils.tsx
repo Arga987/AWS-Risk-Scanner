@@ -64,8 +64,8 @@ export const getSecurityGroupFindingsColumns = (
     },
   },
   {
-    id: "remediation",
-    header: "Remediation",
+    id: "action",
+    header: "Action",
     cell: ({ row }) => (
       <Button
         variant="outline"

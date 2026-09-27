@@ -1,9 +1,6 @@
 package com.example.securityScanner.service;
 
-import com.example.securityScanner.dto.AccountDto;
-import com.example.securityScanner.dto.RemediationResponseDto;
-import com.example.securityScanner.dto.ScanFindingsResponseDto;
-import com.example.securityScanner.dto.SecurityFindingResponseDto;
+import com.example.securityScanner.dto.*;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
@@ -154,6 +151,28 @@ public class DynamoDbService {
         UpdateItemRequest updateRequest = UpdateItemRequest.builder().tableName("security-scanner").key(key).updateExpression("SET reason = :reason, solution = :solution").expressionAttributeValues(values).build();
         dynamoDbClient.updateItem(updateRequest);
         return new RemediationResponseDto(issue, reason, solution);
+    }
+
+    public List<ScanHistoryDto> getScanHistory() {
+        Map<String, AttributeValue> values = new HashMap<>();
+        values.put(":account", AttributeValue.builder().s("ACCOUNT").build());
+        ScanRequest request = ScanRequest.builder().tableName("security-scanner").filterExpression("entityKey = :account").expressionAttributeValues(values).build();
+        ScanResponse response = dynamoDbClient.scan(request);
+        return response.items().stream()
+                .map(this::mapToScanHistory)
+                .sorted(Comparator.comparing(ScanHistoryDto::dateCreated).reversed())
+                .toList();
+    }
+
+    private ScanHistoryDto mapToScanHistory(Map<String, AttributeValue> item) {
+        return new ScanHistoryDto(
+                item.get("accountUuid").s(),
+                item.get("dateCreated").s(),
+                item.get("accountName").s(),
+                Integer.parseInt(item.get("highCount").n()),
+                Integer.parseInt(item.get("mediumCount").n()),
+                Integer.parseInt(item.get("lowCount").n())
+        );
     }
 
     private SecurityFindingResponseDto mapToSecurityFinding(Map<String, AttributeValue> item) {

@@ -5,6 +5,7 @@ const api = {
     SCAN: `${serverContext}/security-groups/scan`,
     FINDINGS: `${serverContext}/accounts/security-groups`,
     REMEDIATION: `${serverContext}/accounts/security-groups/remediation`,
+    HISTORY: `${serverContext}/accounts/history`,
   },
 };
 

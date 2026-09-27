@@ -1,9 +1,6 @@
 package com.example.securityScanner.controller;
 
-import com.example.securityScanner.dto.RemediationResponseDto;
-import com.example.securityScanner.dto.ScanFindingsResponseDto;
-import com.example.securityScanner.dto.ScanSummaryDto;
-import com.example.securityScanner.dto.SecurityGroupResponseDto;
+import com.example.securityScanner.dto.*;
 import com.example.securityScanner.service.AccountInformationService;
 import com.example.securityScanner.service.DynamoDbService;
 import com.example.securityScanner.service.ScanService;
@@ -65,5 +62,10 @@ public class SecurityGroupController {
             @RequestParam String sgUuid
     ) {
         return dynamoDbService.getRemediation(accountUuid, sgUuid);
+    }
+
+    @GetMapping("/accounts/history")
+    public List<ScanHistoryDto> getScanHistory() {
+        return dynamoDbService.getScanHistory();
     }
 }

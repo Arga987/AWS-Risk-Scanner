@@ -26,3 +26,12 @@ export interface RemediationResponseDto {
   reason: string[];
   solution: string[];
 }
+
+export interface ScanHistory {
+  accountUuid: string;
+  dateCreated: string;
+  accountName: string;
+  highCount: number;
+  mediumCount: number;
+  lowCount: number;
+}
