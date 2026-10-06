@@ -56,13 +56,16 @@ const Home = () => {
           )}
 
           {!scanComplete ? (
-            <div className="mt-12 w-full max-w-2xl rounded-lg border bg-white p-8 shadow-sm">
+            <div
+              className="mt-12 w-full max-w-2xl rounded-lg border border-slate-200 border-l-4 border-l-green-500 bg-white
+      p-8 shadow-sm dark:border-white dark:border-l-green-500 dark:bg-[#202426] dark:shadow-none"
+            >
               <div className="flex flex-col items-center text-center">
-                <h2 className="text-xl font-semibold">
+                <h2 className="text-xl font-semibold dark:text-white">
                   SECURITY GROUP SCANNER
                 </h2>
 
-                <p className="mt-3 max-w-lg text-sm text-muted-foreground">
+                <p className="mt-3 max-w-lg text-sm text-muted-foreground dark:text-gray-300">
                   Scan your AWS account to identify potentially risky Security
                   Group rules and security issues.
                 </p>
@@ -75,38 +78,59 @@ const Home = () => {
           ) : (
             <div className="w-full max-w-3xl">
               {/* Success Message */}
-              <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center">
-                <h2 className="font-semibold text-green-700">
+              <div
+                className="rounded-lg border border-green-200 bg-green-50 p-6
+      text-center dark:border-green-500/30 dark:bg-green-500/10"
+              >
+                <h2 className="font-semibold text-green-700 dark:text-green-400">
                   Scan Completed Successfully!
                 </h2>
 
-                <p className="mt-2 text-sm text-green-600">
+                <p className="mt-2 text-sm text-green-600 dark:text-green-300">
                   Your AWS account has been scanned successfully.
                 </p>
               </div>
 
               {/* Severity Counts */}
               <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-                <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-                  <p className="text-sm font-medium text-red-700">HIGH</p>
+                {/* HIGH */}
+                <div
+                  className="rounded-lg border border-red-200 bg-red-50
+        p-6 text-center dark:border-red-500/30 dark:bg-red-500/10"
+                >
+                  <p className="text-sm font-medium text-red-700 dark:text-red-400">
+                    HIGH
+                  </p>
 
-                  <p className="mt-2 text-3xl font-semibold text-red-800">
+                  <p className="mt-2 text-3xl font-semibold text-red-800 dark:text-red-300">
                     {scanSummary?.highCount}
                   </p>
                 </div>
 
-                <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-6 text-center">
-                  <p className="text-sm font-medium text-yellow-700">MEDIUM</p>
+                {/* MEDIUM */}
+                <div
+                  className="rounded-lg border border-yellow-200 bg-yellow-50
+        p-6 text-center dark:border-yellow-500/30 dark:bg-yellow-500/10"
+                >
+                  <p className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
+                    MEDIUM
+                  </p>
 
-                  <p className="mt-2 text-3xl font-semibold text-yellow-800">
+                  <p className="mt-2 text-3xl font-semibold text-yellow-800 dark:text-yellow-300">
                     {scanSummary?.mediumCount}
                   </p>
                 </div>
 
-                <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center">
-                  <p className="text-sm font-medium text-green-700">LOW</p>
+                {/* LOW */}
+                <div
+                  className="rounded-lg border border-green-200 bg-green-50 p-6
+        text-center dark:border-green-500/30 dark:bg-green-500/10"
+                >
+                  <p className="text-sm font-medium text-green-700 dark:text-green-400">
+                    LOW
+                  </p>
 
-                  <p className="mt-2 text-3xl font-semibold text-green-800">
+                  <p className="mt-2 text-3xl font-semibold text-green-800 dark:text-green-300">
                     {scanSummary?.lowCount}
                   </p>
                 </div>
@@ -114,7 +138,7 @@ const Home = () => {
 
               {/* View Findings */}
               <div className="mt-8 flex flex-col items-center">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground dark:text-gray-300">
                   Click below to view the detailed findings
                 </p>
 

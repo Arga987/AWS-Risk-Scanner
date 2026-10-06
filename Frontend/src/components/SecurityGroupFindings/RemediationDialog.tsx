@@ -65,16 +65,15 @@ const RemediationDialog = (props: Props) => {
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="max-w-5xl">
+        <DialogContent className="max-w-5xl dark:border-white/20 dark:bg-[#202426]">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold">
               Remediation Action
             </DialogTitle>
           </DialogHeader>
-
           {isLoading ? (
             <div className="flex h-80 items-center justify-center">
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex items-center justify-center gap-2 text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Loading remediation...
               </div>
@@ -91,7 +90,7 @@ const RemediationDialog = (props: Props) => {
                   className={`rounded-md px-4 py-2 text-sm font-semibold ${
                     finding?.severity
                       ? severityStyles[finding.severity]
-                      : "bg-gray-50 text-gray-700"
+                      : "bg-gray-50 text-gray-700 dark:bg-[#252b2e] dark:text-gray-200"
                   }`}
                 >
                   {finding?.severity}
@@ -102,13 +101,13 @@ const RemediationDialog = (props: Props) => {
                 </div>
               </div>
 
-              <div className="border-t" />
+              <div className="border-t border-slate-200 dark:border-white/10" />
 
               {/* Issue */}
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold">Issue</h3>
 
-                <div className="rounded-md border bg-red-50 p-4 text-sm leading-6 text-black">
+                <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm leading-6 text-black dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-100">
                   {remediation?.issue}
                 </div>
               </div>
@@ -117,7 +116,7 @@ const RemediationDialog = (props: Props) => {
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold">Why is this an issue?</h3>
 
-                <div className="rounded-md border bg-yellow-50 p-4 text-sm leading-6 text-black">
+                <div className="rounded-md border border-yellow-200 bg-yellow-50 p-4 text-sm leading-6 text-black dark:border-yellow-500/20 dark:bg-yellow-500/10 dark:text-yellow-100">
                   <ul className="list-disc space-y-2 pl-5">
                     {remediation?.reason.map((reason, index) => (
                       <li key={index}>{reason}</li>
@@ -130,7 +129,7 @@ const RemediationDialog = (props: Props) => {
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold">Solution</h3>
 
-                <div className="rounded-md border bg-green-50 p-4 text-sm leading-6 text-black">
+                <div className="rounded-md border border-green-200 bg-green-50 p-4 text-sm leading-6 text-black dark:border-green-500/20 dark:bg-green-500/10 dark:text-green-100">
                   <ol className="list-decimal space-y-2 pl-5">
                     {remediation?.solution.map((solution, index) => (
                       <li key={index}>{solution}</li>

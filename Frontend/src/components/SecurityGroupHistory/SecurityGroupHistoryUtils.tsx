@@ -37,7 +37,7 @@ export const getHistoryColumns = (
     accessorKey: "highCount",
     header: "HIGH",
     cell: ({ row }) => (
-      <span className="rounded-md bg-red-50 px-3 py-1 text-red-700">
+      <span className="rounded-md bg-red-50 px-3 py-1 text-red-700 dark:bg-red-500/10 dark:text-red-400">
         {row.original.highCount}
       </span>
     ),
@@ -46,7 +46,7 @@ export const getHistoryColumns = (
     accessorKey: "mediumCount",
     header: "MEDIUM",
     cell: ({ row }) => (
-      <span className="rounded-md bg-yellow-50 px-3 py-1 text-yellow-700">
+      <span className="rounded-md bg-yellow-50 px-3 py-1 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400">
         {row.original.mediumCount}
       </span>
     ),
@@ -55,7 +55,7 @@ export const getHistoryColumns = (
     accessorKey: "lowCount",
     header: "LOW",
     cell: ({ row }) => (
-      <span className="rounded-md bg-green-50 px-3 py-1 text-green-700">
+      <span className="rounded-md bg-green-50 px-3 py-1 text-green-700 dark:bg-green-500/10 dark:text-green-400">
         {row.original.lowCount}
       </span>
     ),
@@ -65,10 +65,9 @@ export const getHistoryColumns = (
     header: "Action",
     cell: ({ row }) => (
       <Button
-        variant="outline"
         size="sm"
         onClick={() => onViewFindings(row.original.accountUuid)}
-        className="cursor-pointer rounded-full border-0 bg-emerald-400 px-6 text-white shadow-md hover:bg-emerald-400"
+        className="cursor-pointer rounded-full border-0 bg-emerald-400 px-6 text-white shadow-md hover:bg-emerald-500"
       >
         View Findings
       </Button>

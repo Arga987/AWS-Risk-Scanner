@@ -3,9 +3,9 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Button } from "../ui/button";
 
 export const severityStyles = {
-  HIGH: "bg-red-50 text-red-700",
-  MEDIUM: "bg-yellow-50 text-yellow-700",
-  LOW: "bg-green-50 text-green-700",
+  HIGH: "text-red-600 dark:text-red-400",
+  MEDIUM: "text-yellow-600 dark:text-yellow-400",
+  LOW: "text-green-600 dark:text-green-400",
 };
 
 export const getSecurityGroupFindingsColumns = (
@@ -15,7 +15,7 @@ export const getSecurityGroupFindingsColumns = (
     accessorKey: "securityGroupId",
     header: "Security Group ID",
     cell: ({ row }) => (
-      <span className="font-medium text-green-600">
+      <span className="font-medium text-green-600 dark:text-green-400">
         {row.getValue("securityGroupId")}
       </span>
     ),
@@ -28,7 +28,9 @@ export const getSecurityGroupFindingsColumns = (
     accessorKey: "vpcId",
     header: "VPC ID",
     cell: ({ row }) => (
-      <span className="font-medium text-blue-600">{row.getValue("vpcId")}</span>
+      <span className="font-medium text-blue-600 dark:text-blue-400">
+        {row.getValue("vpcId")}
+      </span>
     ),
   },
   {
@@ -68,9 +70,8 @@ export const getSecurityGroupFindingsColumns = (
     header: "Action",
     cell: ({ row }) => (
       <Button
-        variant="outline"
         size="sm"
-        className="cursor-pointer rounded-full border-0 bg-blue-400 px-6 text-white shadow-md hover:bg-blue-200"
+        className="cursor-pointer rounded-full border-0 bg-emerald-400 px-6 text-white shadow-mdhover:bg-emerald-500"
         onClick={() => onViewRemediation(row.original)}
       >
         View Remediation

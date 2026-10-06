@@ -59,7 +59,7 @@ const SecurityGroupHistory = (props: Props) => {
   });
 
   return (
-    <div className="mt-6 rounded-md border">
+    <div className="mt-6 overflow-hidden rounded-md border border-slate-200 dark:border-white">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -67,7 +67,7 @@ const SecurityGroupHistory = (props: Props) => {
               {headerGroup.headers.map((header) => (
                 <TableHead
                   key={header.id}
-                  className="bg-gray-100 text-gray-700"
+                  className="bg-gray-100 text-gray-700 dark:bg-[#252b2e] dark:text-gray-200"
                 >
                   {header.isPlaceholder
                     ? null
@@ -101,7 +101,10 @@ const SecurityGroupHistory = (props: Props) => {
             </TableRow>
           ) : table.getRowModel().rows.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id}>
+              <TableRow
+                key={row.id}
+                className="dark:border-white/10 dark:hover:bg-[#252b2e]"
+              >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

@@ -173,13 +173,13 @@ const SecurityGroupFindings = (props: Props) => {
                 handleSearch();
               }
             }}
-            className="w-full cursor-text caret-black pr-10"
+            className="w-full cursor-text caret-black pr-10 dark:caret-white"
           />
 
           <Button
             type="button"
             onClick={handleSearch}
-            className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 p-0"
+            className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 cursor-pointer p-0"
             aria-label="Search findings"
           >
             <Search className="h-4 w-4" />
@@ -207,15 +207,18 @@ const SecurityGroupFindings = (props: Props) => {
       ) : (
         <>
           {/* Table */}
-          <div className="mt-3 rounded-md border">
+          <div className="mt-3 overflow-hidden rounded-md border border-slate-200 dark:border-white">
             <Table>
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
+                  <TableRow
+                    key={headerGroup.id}
+                    className="dark:border-white/10 dark:hover:bg-[#252b2e]"
+                  >
                     {headerGroup.headers.map((header) => (
                       <TableHead
                         key={header.id}
-                        className="bg-gray-100 text-gray-700"
+                        className="bg-gray-100 text-gray-700 dark:bg-[#252b2e] dark:text-gray-200"
                       >
                         {header.isPlaceholder
                           ? null
@@ -231,7 +234,7 @@ const SecurityGroupFindings = (props: Props) => {
 
               <TableBody>
                 {isLoading ? (
-                  <TableRow>
+                  <TableRow className="dark:border-white/10 dark:hover:bg-[#252b2e]">
                     <TableCell
                       colSpan={columns.length}
                       className="h-24 text-center"
@@ -244,7 +247,10 @@ const SecurityGroupFindings = (props: Props) => {
                   </TableRow>
                 ) : table.getRowModel().rows.length ? (
                   table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id}>
+                    <TableRow
+                      key={row.id}
+                      className="dark:border-white/10 dark:hover:bg-[#252b2e]"
+                    >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id}>
                           {flexRender(
@@ -256,7 +262,7 @@ const SecurityGroupFindings = (props: Props) => {
                     </TableRow>
                   ))
                 ) : (
-                  <TableRow>
+                  <TableRow className="dark:border-white/10 dark:hover:bg-[#252b2e]">
                     <TableCell
                       colSpan={columns.length}
                       className="h-24 text-center"
@@ -296,7 +302,8 @@ const SecurityGroupFindings = (props: Props) => {
               <Button
                 disabled={currentPage === 1}
                 onClick={handlePrevious}
-                className="cursor-pointer rounded-full border border-gray-400 bg-white px-6 text-black shadow-md hover:bg-gray-100 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 disabled:opacity-60 disabled:hover:bg-gray-200"
+                className="cursor-pointer rounded-full border border-gray-400 bg-white px-6 text-black shadow-md hover:bg-gray-100 dark:border-white/40
+    dark:bg-[#252b2e] dark:text-white dark:hover:bg-[#202426] disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 disabled:opacity-60 disabled:hover:bg-gray-200"
               >
                 Previous
               </Button>
