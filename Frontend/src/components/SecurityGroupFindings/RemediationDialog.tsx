@@ -9,7 +9,7 @@ import type {
   SecurityGroupFinding,
 } from "@/interfaces/SecurityGroupInterfaces";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "@/util/axiosInstance";
 import api from "@/API";
 import { severityStyles } from "./SecurityGroupFindingsUtils";
 import { Loader2 } from "lucide-react";
@@ -34,7 +34,7 @@ const RemediationDialog = (props: Props) => {
     setIsLoading(true);
     setRemediation(null);
     try {
-      const response = await axios.get<RemediationResponseDto>(
+      const response = await axiosInstance.get<RemediationResponseDto>(
         api.SECURITY_GROUP.REMEDIATION,
         {
           params: {

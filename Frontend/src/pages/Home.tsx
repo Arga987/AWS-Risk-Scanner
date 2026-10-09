@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import axiosInstance from "@/util/axiosInstance";
 import PageShell from "../components/PageShell";
 import { Button } from "@/components/ui/button";
 import type { ScanSummaryDto } from "@/interfaces/SecurityGroupInterfaces";
@@ -19,7 +19,7 @@ const Home = () => {
     setErrorMessage(null);
 
     try {
-      const response = await axios.post<ScanSummaryDto>(
+      const response = await axiosInstance.post<ScanSummaryDto>(
         api.SECURITY_GROUP.SCAN
       );
 

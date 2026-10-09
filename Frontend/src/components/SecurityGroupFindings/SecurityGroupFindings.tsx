@@ -21,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import axios from "axios";
+import axiosInstance from "@/util/axiosInstance";
 import api from "@/API";
 import type {
   SecurityGroupFinding,
@@ -121,7 +121,7 @@ const SecurityGroupFindings = (props: Props) => {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const response = await axios.get<SecurityGroupFindingsResponse>(
+      const response = await axiosInstance.get<SecurityGroupFindingsResponse>(
         api.SECURITY_GROUP.FINDINGS,
         {
           params: {

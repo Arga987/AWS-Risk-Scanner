@@ -1,21 +1,12 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar";
-import Home from "./pages/Home";
-import History from "./pages/History";
-import NotFound from "./pages/NotFound";
+import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "./components/context/ThemeProvider";
+import AppRoutes from "./AppRoutes";
 
 const App = () => {
   return (
     <ThemeProvider>
       <BrowserRouter>
-        <Navbar />
-
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/history" element={<History />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AppRoutes />
       </BrowserRouter>
     </ThemeProvider>
   );

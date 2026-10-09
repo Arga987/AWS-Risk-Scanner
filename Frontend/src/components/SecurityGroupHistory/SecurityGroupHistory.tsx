@@ -1,6 +1,6 @@
 import api from "@/API";
 import type { ScanHistory } from "@/interfaces/SecurityGroupInterfaces";
-import axios from "axios";
+import axiosInstance from "@/util/axiosInstance";
 import { useEffect, useState } from "react";
 import {
   Table,
@@ -33,7 +33,7 @@ const SecurityGroupHistory = (props: Props) => {
     setIsLoading(true);
 
     try {
-      const response = await axios.get<ScanHistory[]>(
+      const response = await axiosInstance.get<ScanHistory[]>(
         api.SECURITY_GROUP.HISTORY
       );
 
