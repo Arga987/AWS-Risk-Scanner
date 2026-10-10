@@ -1,9 +1,10 @@
-const serverContext = "http://localhost:8080";
+const serverContext = "http://192.168.0.111:8080";
 
 const api = {
   AUTH: {
     LOGIN: `${serverContext}/api/auth/login`,
     SESSION: `${serverContext}/api/auth/session`,
+    CSRF: `${serverContext}/api/auth/csrf`,
   },
 
   SECURITY_GROUP: {

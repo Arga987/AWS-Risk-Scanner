@@ -48,17 +48,16 @@ const Home = () => {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col items-center px-6 py-16">
+        <div className="flex flex-col items-center px-4 py-8 sm:px-6 sm:py-16">
           {errorMessage && (
             <div className="mb-6 w-full max-w-2xl">
               <ErrorMessage message={errorMessage} />
             </div>
           )}
-
           {!scanComplete ? (
             <div
-              className="mt-12 w-full max-w-2xl rounded-lg border border-slate-200 border-l-4 border-l-green-500 bg-white
-      p-8 shadow-sm dark:border-white dark:border-l-green-500 dark:bg-[#202426] dark:shadow-none"
+              className="mt-6 w-full max-w-2xl rounded-lg border border-slate-200 border-l-4 border-l-green-500 bg-white p-5 shadow-sm sm:mt-12 sm:p-8
+            dark:border-white/20 dark:border-l-green-500 dark:bg-[#202426] dark:shadow-none"
             >
               <div className="flex flex-col items-center text-center">
                 <h2 className="text-xl font-semibold dark:text-white">
@@ -78,10 +77,7 @@ const Home = () => {
           ) : (
             <div className="w-full max-w-3xl">
               {/* Success Message */}
-              <div
-                className="rounded-lg border border-green-200 bg-green-50 p-6
-      text-center dark:border-green-500/30 dark:bg-green-500/10"
-              >
+              <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-center sm:p-6 dark:border-green-500/30 dark:bg-green-500/10">
                 <h2 className="font-semibold text-green-700 dark:text-green-400">
                   Scan Completed Successfully!
                 </h2>
@@ -92,12 +88,9 @@ const Home = () => {
               </div>
 
               {/* Severity Counts */}
-              <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:mt-6 sm:gap-4 md:grid-cols-3">
                 {/* HIGH */}
-                <div
-                  className="rounded-lg border border-red-200 bg-red-50
-        p-6 text-center dark:border-red-500/30 dark:bg-red-500/10"
-                >
+                <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-center sm:p-6 dark:border-red-500/30 dark:bg-red-500/10">
                   <p className="text-sm font-medium text-red-700 dark:text-red-400">
                     HIGH
                   </p>
@@ -108,10 +101,7 @@ const Home = () => {
                 </div>
 
                 {/* MEDIUM */}
-                <div
-                  className="rounded-lg border border-yellow-200 bg-yellow-50
-        p-6 text-center dark:border-yellow-500/30 dark:bg-yellow-500/10"
-                >
+                <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-center sm:p-6 dark:border-yellow-500/30 dark:bg-yellow-500/10">
                   <p className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
                     MEDIUM
                   </p>
@@ -122,10 +112,7 @@ const Home = () => {
                 </div>
 
                 {/* LOW */}
-                <div
-                  className="rounded-lg border border-green-200 bg-green-50 p-6
-        text-center dark:border-green-500/30 dark:bg-green-500/10"
-                >
+                <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-center sm:p-6 dark:border-green-500/30 dark:bg-green-500/10">
                   <p className="text-sm font-medium text-green-700 dark:text-green-400">
                     LOW
                   </p>
@@ -137,13 +124,13 @@ const Home = () => {
               </div>
 
               {/* View Findings */}
-              <div className="mt-8 flex flex-col items-center">
-                <p className="text-sm text-muted-foreground dark:text-gray-300">
+              <div className="mt-6 flex flex-col items-center sm:mt-8">
+                <p className="text-center text-sm text-muted-foreground dark:text-gray-300">
                   Click below to view the detailed findings
                 </p>
 
                 <Button
-                  className="mt-3 cursor-pointer"
+                  className="mt-3 w-full cursor-pointer sm:w-auto"
                   onClick={() => setShowFindings(true)}
                 >
                   View Findings

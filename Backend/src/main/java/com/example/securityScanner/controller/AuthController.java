@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -28,6 +29,13 @@ public class AuthController {
     @GetMapping("/session")
     public ResponseEntity<Void> checkSession() {
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/csrf")
+    public ResponseEntity<?> getCsrfToken(CsrfToken csrfToken) {
+        return ResponseEntity.ok(
+                java.util.Map.of("token", csrfToken.getToken())
+        );
     }
 
     @PostMapping("/login")

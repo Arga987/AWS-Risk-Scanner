@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2, Moon, Sun, ShieldCheck } from "lucide-react";
-import axiosInstance from "@/util/axiosInstance";
+import axiosInstance, { fetchCsrfToken } from "@/util/axiosInstance";
 import api from "@/API";
 import { useTheme } from "@/components/context/useTheme";
 import axios from "axios";
@@ -25,7 +25,7 @@ const Login = () => {
         username,
         password,
       });
-
+      await fetchCsrfToken();
       navigate("/", { replace: true });
     } catch (error: unknown) {
       if (axios.isAxiosError(error) && error.response?.status === 401) {
@@ -41,20 +41,20 @@ const Login = () => {
   };
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10 dark:bg-[#0a0e0f]">
+    <main className="relative flex min-h-screen min-h-dvh items-center justify-center bg-slate-50 px-4 py-6 dark:bg-[#0a0e0f] sm:py-10">
       {/* Theme toggle */}
       <button
         type="button"
         onClick={toggleTheme}
         aria-label={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
         title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-        className="absolute right-5 top-5 flex h-10 w-10 cursor-pointer items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-white/10"
+        className="absolute right-4 top-4 flex h-10 w-10 cursor-pointer items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-white/10"
       >
         {darkMode ? <Sun size={20} /> : <Moon size={20} />}
       </button>
 
       {/* Login card */}
-      <section className="w-full max-w-md rounded-xl border border-slate-200 border-l-4 border-l-green-500 bg-white p-7 shadow-sm sm:p-9 dark:border-white/20 dark:border-l-green-500 dark:bg-[#202426] dark:shadow-none">
+      <section className="w-full max-w-md rounded-xl border border-slate-200 border-l-4 border-l-green-500 bg-white p-5 shadow-sm sm:p-9 dark:border-white/20 dark:border-l-green-500 dark:bg-[#202426] dark:shadow-none">
         <div className="mb-8 flex flex-col items-center text-center">
           <img
             src="/Logo.png"

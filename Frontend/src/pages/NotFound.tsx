@@ -1,8 +1,8 @@
 const NotFound = () => {
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-slate-50 dark:bg-[#0a0e0f]">
+    <div className="flex min-h-screen min-h-dvh items-center justify-center bg-slate-50 px-4 dark:bg-[#0a0e0f]">
       <div className="text-center">
-        <h1 className="text-6xl font-bold text-slate-900 dark:text-slate-100">
+        <h1 className="text-5xl font-bold text-slate-900 dark:text-slate-100 sm:text-6xl">
           404
         </h1>
 
