@@ -27,7 +27,11 @@ import type {
   SecurityGroupFinding,
   SecurityGroupFindingsResponse,
 } from "@/interfaces/SecurityGroupInterfaces";
-import { getSecurityGroupFindingsColumns } from "@/components/SecurityGroupFindings/SecurityGroupFindingsUtils";
+import {
+  getFindingDetailClassNameForMobile,
+  getSecurityGroupFindingDetailsForMobile,
+  getSecurityGroupFindingsColumns,
+} from "@/components/SecurityGroupFindings/SecurityGroupFindingsUtils";
 import { Button } from "@base-ui/react/button";
 import RemediationDialog from "./RemediationDialog";
 import ErrorMessage from "@/util/ErrorMessage";
@@ -68,6 +72,15 @@ const SecurityGroupFindings = (props: Props) => {
     setSearchString(value);
   };
 
+  const handleSearchKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      handleSearch();
+    }
+  };
+
   const handleCloseRemediation = () => {
     setIsRemediationOpen(false);
     setSelectedFinding(null);
@@ -82,6 +95,10 @@ const SecurityGroupFindings = (props: Props) => {
     setSearchString("");
     setSelectedSeverity("ALL");
     fetchFindings(undefined, newPageSize, "ALL", "");
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   const handleSearch = () => {
@@ -97,6 +114,10 @@ const SecurityGroupFindings = (props: Props) => {
 
   const handleNext = () => {
     if (!nextPageToken) return;
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
     setPageTokens((tokens) => [...tokens, nextPageToken]);
     fetchFindings(nextPageToken);
     setCurrentPage((page) => page + 1);
@@ -104,6 +125,10 @@ const SecurityGroupFindings = (props: Props) => {
 
   const handlePrevious = () => {
     if (currentPage === 1) return;
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
     const previousPageToken = pageTokens[pageTokens.length - 2];
     fetchFindings(previousPageToken);
     setPageTokens((tokens) => tokens.slice(0, -1));
@@ -162,17 +187,14 @@ const SecurityGroupFindings = (props: Props) => {
       </div>
 
       {/* Search + Filter */}
-      <div className="mt-8 flex items-center gap-3">
-        <div className="relative w-full max-w-lg">
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+        {/* Search */}
+        <div className="relative w-full sm:max-w-lg sm:flex-1">
           <Input
             placeholder="Search By ID or Name..."
             value={searchString}
             onChange={(event) => handleSearchChange(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                handleSearch();
-              }
-            }}
+            onKeyDown={handleSearchKeyDown}
             className="w-full cursor-text caret-black pr-10 dark:caret-white"
           />
 
@@ -186,8 +208,9 @@ const SecurityGroupFindings = (props: Props) => {
           </Button>
         </div>
 
+        {/* Severity Filter */}
         <Select value={selectedSeverity} onValueChange={handleSeverityChange}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Severity" />
           </SelectTrigger>
 
@@ -206,8 +229,84 @@ const SecurityGroupFindings = (props: Props) => {
         </div>
       ) : (
         <>
-          {/* Table */}
-          <div className="mt-3 overflow-hidden rounded-md border border-slate-200 dark:border-white">
+          {/* Mobile Cards */}
+          <div className="mt-3 space-y-4 md:hidden">
+            {isLoading ? (
+              <div className="flex h-24 items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-white/10">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading findings...
+              </div>
+            ) : table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map((row) => {
+                const finding = row.original;
+
+                const actionCell = row
+                  .getVisibleCells()
+                  .find((cell) => cell.column.id === "action");
+
+                const details =
+                  getSecurityGroupFindingDetailsForMobile(finding);
+
+                return (
+                  <div
+                    key={row.id}
+                    className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#202426]"
+                  >
+                    {/* Header */}
+                    <div className="mb-3">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        Security Group Name
+                      </p>
+                      <p className="mt-1 break-words text-sm font-semibold">
+                        {finding.securityGroupName}
+                      </p>
+                    </div>
+
+                    <div className="my-3 border-t border-slate-200 dark:border-white/10" />
+
+                    {/* One full-width row per field */}
+                    <div className="space-y-0">
+                      {details.map((detail) => (
+                        <div
+                          key={detail.label}
+                          className="py-3 first:pt-0 last:pb-0"
+                        >
+                          <p className="text-xs font-medium text-muted-foreground">
+                            {detail.label}
+                          </p>
+
+                          <p
+                            className={getFindingDetailClassNameForMobile(
+                              detail.label,
+                              finding.severity
+                            )}
+                          >
+                            {detail.value}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Action Button */}
+                    {actionCell && (
+                      <div className="mt-4 border-t border-slate-200 pt-4 dark:border-white/10">
+                        {flexRender(
+                          actionCell.column.columnDef.cell,
+                          actionCell.getContext()
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              <div className="flex h-24 items-center justify-center rounded-xl border border-slate-200 text-sm text-muted-foreground dark:border-white/10">
+                No findings found.
+              </div>
+            )}
+          </div>
+          {/* Desktop Table — existing layout preserved */}
+          <div className="mt-3 hidden overflow-hidden rounded-md border border-slate-200 dark:border-white md:block">
             <Table>
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -274,36 +373,40 @@ const SecurityGroupFindings = (props: Props) => {
               </TableBody>
             </Table>
           </div>
-
           {/* Pagination */}
-          <div className="mt-4 flex items-center justify-end gap-4">
-            <p className="text-sm text-muted-foreground">Page {currentPage}</p>
+          <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end">
+            {/* Page + Size */}
+            <div className="flex items-center justify-between gap-4 sm:justify-start">
+              <p className="text-sm text-muted-foreground">
+                Page {currentPage}
+              </p>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Size:</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Size:</span>
 
-              <Select
-                value={pageSize.toString()}
-                onValueChange={handlePageSizeChange}
-              >
-                <SelectTrigger className="w-[80px]">
-                  <SelectValue />
-                </SelectTrigger>
+                <Select
+                  value={pageSize.toString()}
+                  onValueChange={handlePageSizeChange}
+                >
+                  <SelectTrigger className="w-[80px]">
+                    <SelectValue />
+                  </SelectTrigger>
 
-                <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                </SelectContent>
-              </Select>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
+            {/* Previous + Next */}
             <div className="flex gap-2">
               <Button
                 disabled={currentPage === 1}
                 onClick={handlePrevious}
-                className="cursor-pointer rounded-full border border-gray-400 bg-white px-6 text-black shadow-md hover:bg-gray-100 dark:border-white/40
-    dark:bg-[#252b2e] dark:text-white dark:hover:bg-[#202426] disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 disabled:opacity-60 disabled:hover:bg-gray-200"
+                className="flex-1 cursor-pointer rounded-full border border-gray-400 bg-white px-4 text-black shadow-md hover:bg-gray-100 dark:border-white/40 dark:bg-[#252b2e] dark:text-white dark:hover:bg-[#202426] disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 disabled:opacity-60 disabled:hover:bg-gray-200 sm:flex-none sm:px-6"
               >
                 Previous
               </Button>
@@ -311,7 +414,7 @@ const SecurityGroupFindings = (props: Props) => {
               <Button
                 disabled={!nextPageToken}
                 onClick={handleNext}
-                className="cursor-pointer rounded-full border-0 bg-emerald-400 px-6 text-white shadow-md hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 disabled:opacity-70 disabled:hover:bg-gray-300"
+                className="flex-1 cursor-pointer rounded-full border-0 bg-emerald-400 px-4 text-white shadow-md hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 disabled:opacity-70 disabled:hover:bg-gray-300 sm:flex-none sm:px-6"
               >
                 Next
               </Button>

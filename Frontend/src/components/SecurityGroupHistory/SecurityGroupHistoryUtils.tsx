@@ -1,6 +1,7 @@
 import type { ScanHistory } from "@/interfaces/SecurityGroupInterfaces";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Button } from "../ui/button";
+import { capitalizeFirstLetter, formattedDate } from "@/util/CommonUtil";
 
 export const getHistoryColumns = (
   onViewFindings: (accountUuid: string) => void
@@ -11,7 +12,7 @@ export const getHistoryColumns = (
     cell: ({ row }) => {
       const accountName = row.original.accountName;
 
-      return accountName.charAt(0).toUpperCase() + accountName.slice(1);
+      return capitalizeFirstLetter(accountName);
     },
   },
   {
@@ -20,17 +21,7 @@ export const getHistoryColumns = (
     cell: ({ row }) => {
       const date = new Date(row.original.dateCreated);
 
-      return date
-        .toLocaleString("en-IN", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        })
-        .replace("am", "AM")
-        .replace("pm", "PM");
+      return formattedDate(date);
     },
   },
   {

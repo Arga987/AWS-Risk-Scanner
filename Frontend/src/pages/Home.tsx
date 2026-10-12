@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axiosInstance from "@/util/axiosInstance";
 import PageShell from "../components/PageShell";
 import { Button } from "@/components/ui/button";
@@ -6,13 +6,23 @@ import type { ScanSummaryDto } from "@/interfaces/SecurityGroupInterfaces";
 import api from "@/API";
 import SecurityGroupFindings from "@/components/SecurityGroupFindings/SecurityGroupFindings";
 import ErrorMessage from "@/util/ErrorMessage";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Home = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isScanning, setIsScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
   const [scanSummary, setScanSummary] = useState<ScanSummaryDto | null>(null);
-  const [showFindings, setShowFindings] = useState(false);
+  const showFindings = location.state?.viewingFindings === true;
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const resetScanner = () => {
+    setIsScanning(false);
+    setScanComplete(false);
+    setScanSummary(null);
+    setErrorMessage(null);
+  };
 
   const handleScan = async () => {
     setIsScanning(true);
@@ -33,9 +43,26 @@ const Home = () => {
     }
   };
 
+  const handleViewFindings = () => {
+    if (!scanSummary) return;
+    navigate("/", {
+      state: {
+        viewingFindings: true,
+        accountUuid: scanSummary.accountUuid,
+      },
+    });
+  };
+
+  useEffect(() => {
+    if (!location.state?.viewingFindings) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      resetScanner();
+    }
+  }, [location.key, location.state]);
+
   return (
     <PageShell>
-      {showFindings ? (
+      {showFindings && location.state?.accountUuid ? (
         <SecurityGroupFindings accountUuid={scanSummary.accountUuid} />
       ) : isScanning ? (
         <div className="flex min-h-[calc(100vh-6rem)] items-center justify-center">
@@ -56,8 +83,8 @@ const Home = () => {
           )}
           {!scanComplete ? (
             <div
-              className="mt-6 w-full max-w-2xl rounded-lg border border-slate-200 border-l-4 border-l-green-500 bg-white p-5 shadow-sm sm:mt-12 sm:p-8
-            dark:border-white/20 dark:border-l-green-500 dark:bg-[#202426] dark:shadow-none"
+              className="mt-6 w-full max-w-2xl rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:mt-12 sm:p-8
+    dark:border-white/20 dark:bg-[#202426] dark:shadow-none"
             >
               <div className="flex flex-col items-center text-center">
                 <h2 className="text-xl font-semibold dark:text-white">
@@ -131,7 +158,7 @@ const Home = () => {
 
                 <Button
                   className="mt-3 w-full cursor-pointer sm:w-auto"
-                  onClick={() => setShowFindings(true)}
+                  onClick={handleViewFindings}
                 >
                   View Findings
                 </Button>

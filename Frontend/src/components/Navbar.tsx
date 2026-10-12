@@ -52,6 +52,7 @@ const Navbar = () => {
         <NavLink
           to="/"
           end
+          state={null}
           className={({ isActive }) =>
             `flex h-full items-center px-16 text-sm font-medium transition-colors ${
               isActive
@@ -131,6 +132,7 @@ const Navbar = () => {
             <NavLink
               to="/"
               end
+              state={null}
               onClick={() => setMenuOpen(false)}
               className={navLinkClass}
             >

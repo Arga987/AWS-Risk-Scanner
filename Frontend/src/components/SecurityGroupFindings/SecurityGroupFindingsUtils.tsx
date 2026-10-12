@@ -8,6 +8,62 @@ export const severityStyles = {
   LOW: "text-green-600 dark:text-green-400",
 };
 
+export const getFindingDetailClassNameForMobile = (
+  label: string,
+  severity: SecurityGroupFinding["severity"]
+): string => {
+  const baseClass = "mt-1 break-words text-sm";
+
+  switch (label) {
+    case "Security Group ID":
+      return `${baseClass} font-medium text-green-600 dark:text-green-400`;
+
+    case "VPC ID":
+      return `${baseClass} font-medium text-blue-600 dark:text-blue-400`;
+
+    case "Severity":
+      return `${baseClass} font-semibold ${
+        severity === "HIGH"
+          ? "text-red-600 dark:text-red-400"
+          : severity === "MEDIUM"
+            ? "text-amber-600 dark:text-amber-400"
+            : "text-green-600 dark:text-green-400"
+      }`;
+
+    default:
+      return baseClass;
+  }
+};
+
+export const getSecurityGroupFindingDetailsForMobile = (
+  finding: SecurityGroupFinding
+) => [
+  {
+    label: "Security Group ID",
+    value: finding.securityGroupId,
+  },
+  {
+    label: "VPC ID",
+    value: finding.vpcId,
+  },
+  {
+    label: "Inbound Rules",
+    value: finding.inboundRuleCount,
+  },
+  {
+    label: "Rule",
+    value: finding.rule,
+  },
+  {
+    label: "Issue",
+    value: finding.issue,
+  },
+  {
+    label: "Severity",
+    value: finding.severity,
+  },
+];
+
 export const getSecurityGroupFindingsColumns = (
   onViewRemediation: (finding: SecurityGroupFinding) => void
 ): ColumnDef<SecurityGroupFinding>[] => [

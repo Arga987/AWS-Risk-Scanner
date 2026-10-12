@@ -65,7 +65,7 @@ const RemediationDialog = (props: Props) => {
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="max-w-5xl dark:border-white/20 dark:bg-[#202426]">
+        <DialogContent className="flex max-h-[90dvh] w-[calc(100%-1rem)] max-w-5xl flex-col overflow-hidden p-4 sm:p-6 dark:border-white/20 dark:bg-[#202426]">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold">
               Remediation Action
@@ -83,9 +83,9 @@ const RemediationDialog = (props: Props) => {
               <ErrorMessage message={errorMessage} />
             </div>
           ) : (
-            <>
+            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto">
               {/* Severity + Rule */}
-              <div className="flex items-center gap-6">
+              <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-6">
                 <div
                   className={`rounded-md px-4 py-2 text-sm font-semibold ${
                     finding?.severity
@@ -95,8 +95,7 @@ const RemediationDialog = (props: Props) => {
                 >
                   {finding?.severity}
                 </div>
-
-                <div className="text-sm">
+                <div className="break-words text-sm">
                   <span className="font-semibold">Rule:</span> {finding?.rule}
                 </div>
               </div>
@@ -137,7 +136,7 @@ const RemediationDialog = (props: Props) => {
                   </ol>
                 </div>
               </div>
-            </>
+            </div>
           )}
         </DialogContent>
       </Dialog>
