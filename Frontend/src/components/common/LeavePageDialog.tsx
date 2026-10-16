@@ -25,7 +25,7 @@ const LeavePageDialog = ({
       open={isOpen}
       onOpenChange={(open) => {
         if (!open) {
-          blocker.reset();
+          blocker.reset?.();
         }
       }}
     >
@@ -37,12 +37,12 @@ const LeavePageDialog = ({
         <p className="text-sm text-muted-foreground">{message}</p>
 
         <div className="flex justify-end gap-3">
-          <Button onClick={() => blocker.reset()} className="cursor-pointer">
+          <Button onClick={() => blocker.reset?.()} className="cursor-pointer">
             Stay
           </Button>
 
           <Button
-            onClick={() => blocker.proceed()}
+            onClick={() => blocker.proceed?.()}
             className="cursor-pointer bg-red-500 text-white hover:bg-red-600"
           >
             Leave

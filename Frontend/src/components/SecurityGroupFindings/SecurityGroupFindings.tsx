@@ -86,7 +86,7 @@ const SecurityGroupFindings = (props: Props) => {
     setSelectedFinding(null);
   };
 
-  const handlePageSizeChange = (value: string) => {
+  const handlePageSizeChange = (value: string | null) => {
     const newPageSize = Number(value);
     setPageSize(newPageSize);
     setCurrentPage(1);
@@ -108,8 +108,10 @@ const SecurityGroupFindings = (props: Props) => {
     fetchFindings();
   };
 
-  const handleSeverityChange = (value: string) => {
-    setSelectedSeverity(value);
+  const handleSeverityChange = (value: string | null) => {
+    if (value != null) {
+      setSelectedSeverity(value);
+    }
   };
 
   const handleNext = () => {

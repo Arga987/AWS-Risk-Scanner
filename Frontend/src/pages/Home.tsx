@@ -63,7 +63,9 @@ const Home = () => {
   return (
     <PageShell>
       {showFindings && location.state?.accountUuid ? (
-        <SecurityGroupFindings accountUuid={scanSummary.accountUuid} />
+        scanSummary?.accountUuid && (
+          <SecurityGroupFindings accountUuid={scanSummary.accountUuid} />
+        )
       ) : isScanning ? (
         <div className="flex min-h-[calc(100vh-6rem)] items-center justify-center">
           <div className="flex flex-col items-center gap-4">
