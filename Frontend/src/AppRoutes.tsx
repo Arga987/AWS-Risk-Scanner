@@ -1,4 +1,4 @@
-import { Route, Routes, useLocation } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import History from "./pages/History";
@@ -7,22 +7,40 @@ import Home from "./pages/Home";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const AppRoutes = () => {
-  const location = useLocation();
-  const isLoginPage = location.pathname === "/login";
-
   return (
-    <>
-      {!isLoginPage && <Navbar />}
+    <Routes>
+      <Route path="/login" element={<Login />} />
 
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/history" element={<History />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
-      </Routes>
-    </>
+      <Route element={<ProtectedRoute />}>
+        <Route
+          path="/"
+          element={
+            <>
+              <Navbar />
+              <Home />
+            </>
+          }
+        />
+        <Route
+          path="/history"
+          element={
+            <>
+              <Navbar />
+              <History />
+            </>
+          }
+        />
+        <Route
+          path="*"
+          element={
+            <>
+              <Navbar />
+              <NotFound />
+            </>
+          }
+        />
+      </Route>
+    </Routes>
   );
 };
 
