@@ -1,4 +1,4 @@
-const serverContext = "http://192.168.0.111:8080";
+const serverContext = import.meta.env.VITE_API_BASE_URL;
 
 const api = {
   AUTH: {

@@ -5,6 +5,8 @@ import axiosInstance, { fetchCsrfToken } from "@/util/axiosInstance";
 import api from "@/API";
 import { useTheme } from "@/components/context/useTheme";
 import axios from "axios";
+import { isCognitoMode } from "@/config/authConfig";
+import { fetchAuthSession, signIn } from "aws-amplify/auth";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -19,16 +21,49 @@ const Login = () => {
     event.preventDefault();
     setErrorMessage("");
     setIsLoading(true);
+    const existingSession = await fetchAuthSession();
+    if (existingSession.tokens?.accessToken) {
+      navigate("/", { replace: true });
+      return;
+    }
 
     try {
-      await axiosInstance.post(api.AUTH.LOGIN, {
-        username,
-        password,
-      });
-      await fetchCsrfToken();
+      if (isCognitoMode) {
+        const result = await signIn({
+          username: username.trim(),
+          password,
+        });
+
+        if (!result.isSignedIn) {
+          setErrorMessage(
+            "Additional sign-in steps are required. Please check your Cognito configuration."
+          );
+          return;
+        }
+      } else {
+        await axiosInstance.post(api.AUTH.LOGIN, {
+          username,
+          password,
+        });
+        await fetchCsrfToken();
+      }
+
       navigate("/", { replace: true });
     } catch (error: unknown) {
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
+      if (isCognitoMode) {
+        const errorName = error instanceof Error ? error.name : "";
+
+        if (
+          errorName === "NotAuthorizedException" ||
+          errorName === "UserNotFoundException"
+        ) {
+          setErrorMessage("Invalid email or password.");
+        } else {
+          setErrorMessage(
+            "Unable to log in. Please check your credentials and try again."
+          );
+        }
+      } else if (axios.isAxiosError(error) && error.response?.status === 401) {
         setErrorMessage("Invalid username or password.");
       } else {
         setErrorMessage(
@@ -77,7 +112,7 @@ const Login = () => {
               htmlFor="username"
               className="text-sm font-medium text-gray-700 dark:text-gray-200"
             >
-              Username
+              {isCognitoMode ? "Email" : "Username"}
             </label>
 
             <input
@@ -85,7 +120,9 @@ const Login = () => {
               name="username"
               type="text"
               autoComplete="username"
-              placeholder="Enter your username"
+              placeholder={
+                isCognitoMode ? "Enter your email" : "Enter your username"
+              }
               value={username}
               onChange={(event) => setUsername(event.target.value)}
               required

@@ -1,5 +1,7 @@
 import api from "@/API";
+import { isCognitoMode } from "@/config/authConfig";
 import axiosInstance, { fetchCsrfToken } from "@/util/axiosInstance";
+import { fetchAuthSession } from "aws-amplify/auth";
 import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 
@@ -7,16 +9,25 @@ const ProtectedRoute = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const checkSession = async () => {
+    const checkAuthentication = async () => {
       try {
-        await axiosInstance.get(api.AUTH.SESSION);
-        await fetchCsrfToken();
+        if (isCognitoMode) {
+          const session = await fetchAuthSession();
+
+          if (!session.tokens?.accessToken) {
+            setIsAuthenticated(false);
+            return;
+          }
+        } else {
+          await axiosInstance.get(api.AUTH.SESSION);
+          await fetchCsrfToken();
+        }
         setIsAuthenticated(true);
       } catch {
         setIsAuthenticated(false);
       }
     };
-    checkSession();
+    checkAuthentication();
   }, []);
 
   if (isAuthenticated === null) {
