@@ -43,13 +43,19 @@ export const clearCsrfToken = () => {
 // Attach the appropriate authentication credentials to each request.
 axiosInstance.interceptors.request.use(async (config) => {
   if (isCognitoMode) {
-    const session = await fetchAuthSession();
-    const accessToken = session.tokens?.accessToken?.toString();
+    try {
+      const session = await fetchAuthSession();
+      const accessToken = session.tokens?.accessToken?.toString();
+      if (!accessToken) {
+        throw new Error("No access token available");
+      }
 
-    if (accessToken) {
       config.headers.set("Authorization", `Bearer ${accessToken}`);
+      return config;
+    } catch (error) {
+      window.location.assign("/login");
+      return Promise.reject(error);
     }
-    return config;
   }
 
   const method = config.method?.toLowerCase();
@@ -76,9 +82,10 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401) {
       const requestUrl = error.config?.url ?? "";
       const isLoginRequest = requestUrl.includes("/api/auth/login");
-
       if (!isLoginRequest) {
-        clearCsrfToken();
+        if (isSessionMode) {
+          clearCsrfToken();
+        }
         window.location.assign("/login");
       }
     }
